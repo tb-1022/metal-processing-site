@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Panel</title>
+  <style>
+    .section { margin-bottom: 1.5em; }
+    .media img, .media video { max-width: 200px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+
+  <div id="adminContent" style="display: none;">
+    <h3>Cutting</h3>
+    <textarea id="cuttingText" placeholder="Cutting description"></textarea><br>
+    <input type="file" id="cuttingMedia" multiple accept="image/*,video/*"><br>
+    <div id="cuttingPreview" class="media"></div>
+
+    <h3>Welding</h3>
+    <textarea id="weldingText" placeholder="Welding description"></textarea><br>
+    <input type="file" id="weldingMedia" multiple accept="image/*,video/*"><br>
+    <div id="weldingPreview" class="media"></div>
+
+    <br><button onclick="saveData()">Save All</button>
+  </div>
+
+  <script>
+    function login() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      if (u === 'admin' && p === 'admin') {
+        document.getElementById('adminContent').style.display = 'block';
+      } else {
+        alert('Invalid credentials');
+      }
+    }
+
+    function previewMedia(inputId, previewId) {
+      const input = document.getElementById(inputId);
+      const preview = document.getElementById(previewId);
+      preview.innerHTML = '';
+      Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          const media = file.type.startsWith('video') ?
+            `<video controls src="${e.target.result}"></video>` :
+            `<img src="${e.target.result}" />`;
+          preview.innerHTML += media;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    document.getElementById('cuttingMedia').addEventListener('change', () => previewMedia('cuttingMedia', 'cuttingPreview'));
+    document.getElementById('weldingMedia').addEventListener('change', () => previewMedia('weldingMedia', 'weldingPreview'));
+
+    function saveData() {
+      localStorage.setItem('cuttingText', document.getElementById('cuttingText').value);
+      localStorage.setItem('weldingText', document.getElementById('weldingText').value);
+
+      ['cuttingMedia', 'weldingMedia'].forEach(id => {
+        const files = document.getElementById(id).files;
+        const mediaData = [];
+        Array.from(files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            mediaData.push({ type: file.type, src: e.target.result });
+            if (mediaData.length === files.length) {
+              localStorage.setItem(id, JSON.stringify(mediaData));
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      alert('Content saved successfully!');
+    }
+  </script>
+</body>
+</html>

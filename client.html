@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Client View</title>
+  <style>
+    .section { margin-bottom: 1.5em; }
+    .media img, .media video { max-width: 200px; margin: 5px; }
+  </style>
+</head>
+<body>
+  <h2>Client Page</h2>
+
+  <div class="section">
+    <h3>Cutting</h3>
+    <p id="cuttingText"></p>
+    <div id="cuttingMedia" class="media"></div>
+  </div>
+
+  <div class="section">
+    <h3>Welding</h3>
+    <p id="weldingText"></p>
+    <div id="weldingMedia" class="media"></div>
+  </div>
+
+  <script>
+    function loadText(id) {
+      document.getElementById(id).innerText = localStorage.getItem(id) || 'No content';
+    }
+
+    function loadMedia(id) {
+      const container = document.getElementById(id);
+      container.innerHTML = '';
+      const media = JSON.parse(localStorage.getItem(id.replace('Media', 'Media')) || '[]');
+      media.forEach(item => {
+        const el = item.type.startsWith('video')
+          ? `<video controls src="${item.src}"></video>`
+          : `<img src="${item.src}" />`;
+        container.innerHTML += el;
+      });
+    }
+
+    loadText('cuttingText');
+    loadText('weldingText');
+    loadMedia('cuttingMedia');
+    loadMedia('weldingMedia');
+  </script>
+</body>
+</html>
