@@ -1,86 +1,74 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Client View</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Client View - Metal Processing</title>
   <style>
-   body {
-  background-image: url('factory-bg.jpg');
-  background-size: cover;
-  font-family: Arial, sans-serif;
-  color: white;
-  padding: 40px;
-  margin: 0;
-}
-
-.section {
-  margin-bottom: 2em;
-  background-color: rgba(0,0,0,0.7);
-  padding: 20px;
-  border-radius: 10px;
-  max-width: 900px;
-  margin-left: auto;
-  margin-right: auto;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-
-.section h3 {
-  border-bottom: 1px solid #999;
-  padding-bottom: 5px;
-  margin-bottom: 10px;
-}
-
-.media {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  gap: 15px;
-}
-
-.media img,
-.media video {
-  max-width: 200px;
-  border-radius: 8px;
-  box-shadow: 0 0 5px rgba(255,255,255,0.3);
-}
-
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url('factory-bg.jpg');
+      background-size: cover;
+      padding: 30px;
+      margin: 0;
+      color: #fff;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .card {
+      background: rgba(0, 0, 0, 0.7);
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .card h3 {
+      margin-top: 0;
+      border-bottom: 1px solid #888;
+      padding-bottom: 6px;
+    }
+    .media {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .media img,
+    .media video {
+      max-width: 100%;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
-  <h2>Client Page</h2>
-
-  <div class="section">
-    <h3>Cutting</h3>
-    <div id="cuttingText"></div>
-    <div id="cuttingMedia" class="media"></div>
-  </div>
-
-  <div class="section">
-    <h3>Welding</h3>
-    <div id="weldingText"></div>
-    <div id="weldingMedia" class="media"></div>
-  </div>
+  <h2>Client View - Saved Data</h2>
+  <div class="grid" id="clientGrid"></div>
 
   <script>
-    function loadTexts(sectionId) {
+    const sections = ['cutting', 'welding', 'polishing', 'coating'];
+    const container = document.getElementById('clientGrid');
+
+    sections.forEach(sectionId => {
       const texts = JSON.parse(localStorage.getItem(sectionId + 'Texts') || '[]');
-      document.getElementById(sectionId + 'Text').innerHTML = texts.map(t => `<p>${t}</p>`).join('');
-    }
-
-    function loadMedia(sectionId) {
-      const container = document.getElementById(sectionId + 'Media');
-      container.innerHTML = '';
       const media = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
-      media.forEach(item => {
-        const el = item.type.startsWith('video')
-          ? `<video controls src="${item.src}"></video>`
-          : `<img src="${item.src}" />`;
-        container.innerHTML += el;
-      });
-    }
 
-    ['cutting', 'welding'].forEach(section => {
-      loadTexts(section);
-      loadMedia(section);
+      texts.forEach((text, index) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = '<h3>' + sectionId.toUpperCase() + '</h3><p>' + text + '</p><div class="media"></div>';
+        const mediaDiv = card.querySelector('.media');
+
+        media.forEach(item => {
+          const el = item.type.startsWith('video') ?
+            `<video controls src="${item.src}"></video>` :
+            `<img src="${item.src}" />`;
+          mediaDiv.innerHTML += el;
+        });
+
+        container.appendChild(card);
+      });
     });
   </script>
 </body>

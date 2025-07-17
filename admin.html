@@ -1,185 +1,173 @@
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Admin Panel</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - Metal Processing</title>
   <style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-image: url('background.jpg');
-    background-size: cover;
-    margin: 0;
-    padding: 40px;
-    color: #fff;
-  }
-
-  .container {
-    background-color: rgba(0, 0, 0, 0.75);
-    padding: 30px;
-    border-radius: 12px;
-    max-width: 1000px;
-    margin: auto;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
-  }
-
-  h2, h3 {
-    text-align: center;
-    border-bottom: 1px solid #555;
-    padding-bottom: 8px;
-  }
-
-  textarea {
-    width: 100%;
-    height: 100px;
-    padding: 10px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border: none;
-    resize: vertical;
-    font-size: 16px;
-  }
-
-  input[type="file"] {
-    margin: 10px 0;
-  }
-
-  button {
-    background-color: #3498db;
-    color: white;
-    padding: 10px 20px;
-    margin: 10px 5px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background-color 0.3s ease;
-  }
-
-  button:hover {
-    background-color: #2980b9;
-  }
-
-  .media {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 15px;
-    margin-top: 10px;
-  }
-
-  .media img,
-  .media video {
-    max-width: 200px;
-    border-radius: 8px;
-    box-shadow: 0 0 5px rgba(255,255,255,0.3);
-  }
-
-  .section {
-    margin-bottom: 30px;
-  }
-</style>
-
+    :root {
+      --bg: #000;
+      --text: #fff;
+      --card: rgba(0, 0, 0, 0.8);
+      --btn: #3498db;
+    }
+    body.light {
+      --bg: #f0f0f0;
+      --text: #111;
+      --card: #fff;
+      --btn: #007acc;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-image: url('bg1.jpg');
+      background-size: cover;
+      background-position: center;
+      margin: 0;
+      padding: 40px;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .toggle-mode {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      cursor: pointer;
+      background: var(--btn);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 8px;
+    }
+    .login-container {
+      background-color: var(--card);
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.7);
+      text-align: center;
+      width: 400px;
+    }
+    .login-container img {
+      width: 100px;
+      border-radius: 50%;
+      margin-bottom: 20px;
+    }
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+    }
+    button {
+      background-color: var(--btn);
+      color: white;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .content-section {
+      display: none;
+      margin-top: 20px;
+    }
+    .section {
+      margin-bottom: 20px;
+    }
+    textarea {
+      width: 100%;
+      height: 100px;
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .media {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .media img, .media video {
+      max-width: 150px;
+      border-radius: 6px;
+    }
+  </style>
 </head>
 <body>
-  <h2>Admin Login</h2>
-  <input type="text" id="username" placeholder="Username">
-  <input type="password" id="password" placeholder="Password">
-  <button onclick="login()">Login</button>
+  <div class="toggle-mode" onclick="toggleMode()">Toggle Dark/Light</div>
+  <div class="login-container">
+    <img src="admin-avatar.png" alt="Admin">
+    <h2>Admin Login</h2>
+    <input type="text" id="username" placeholder="Username">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="login()">Login</button>
 
-  <div id="adminContent" style="display: none;">
-    <div class="section">
-      <h3>Cutting</h3>
-      <textarea id="cuttingText" placeholder="Cutting description"></textarea><br>
-      <input type="file" id="cuttingMedia" multiple accept="image/*,video/*"><br>
-      <div id="cuttingPreview" class="media"></div>
-      <button onclick="saveText('cutting')">Save Cutting Text</button>
-      <button onclick="saveMedia('cutting')">Save Cutting Media</button>
-    </div>
-
-    <div class="section">
-      <h3>Welding</h3>
-      <textarea id="weldingText" placeholder="Welding description"></textarea><br>
-      <input type="file" id="weldingMedia" multiple accept="image/*,video/*"><br>
-      <div id="weldingPreview" class="media"></div>
-      <button onclick="saveText('welding')">Save Welding Text</button>
-      <button onclick="saveMedia('welding')">Save Welding Media</button>
+    <div class="content-section" id="adminContent">
+      <script>
+        const sections = ["cutting", "welding", "polishing", "coating"];
+        document.write(sections.map(id => `
+          <h3>${id.charAt(0).toUpperCase() + id.slice(1)}</h3>
+          <div class="section">
+            <textarea id="${id}Text" placeholder="Enter ${id} Description"></textarea><br>
+            <input type="file" id="${id}Media" multiple><br>
+            <div id="${id}Preview" class="media"></div>
+            <button onclick="saveText('${id}')">Save Text</button>
+            <button onclick="saveMedia('${id}')">Save Media</button>
+          </div>
+        `).join(''));
+      </script>
     </div>
   </div>
 
   <script>
     function login() {
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
-      if (u === 'admin' && p === 'admin') {
-        document.getElementById('adminContent').style.display = 'block';
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (user === "admin" && pass === "1234") {
+        document.getElementById("adminContent").style.display = "block";
       } else {
-        alert('Invalid credentials');
+        alert("Incorrect credentials!");
       }
-    }
-
-    function previewMedia(inputId, previewId) {
-      const input = document.getElementById(inputId);
-      const preview = document.getElementById(previewId);
-      preview.innerHTML = '';
-      Array.from(input.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          const media = file.type.startsWith('video')
-            ? `<video controls src="${e.target.result}"></video>`
-            : `<img src="${e.target.result}" />`;
-          preview.innerHTML += media;
-        };
-        reader.readAsDataURL(file);
-      });
     }
 
     function saveText(sectionId) {
-      const textValue = document.getElementById(sectionId + 'Text').value;
+      const text = document.getElementById(sectionId + 'Text').value;
       const existing = JSON.parse(localStorage.getItem(sectionId + 'Texts') || '[]');
-      existing.push(textValue);
+      existing.push(text);
       localStorage.setItem(sectionId + 'Texts', JSON.stringify(existing));
-      alert(sectionId + ' text saved!');
+      document.getElementById(sectionId + 'Text').value = '';
     }
 
- function saveMedia(sectionId) {
-  const input = document.getElementById(sectionId + 'Media');
-  const preview = document.getElementById(sectionId + 'Preview');
-  const files = input.files;
-  const mediaData = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
-  
-  let filesLoaded = 0;
-  Array.from(files).forEach(file => {
-    const reader = new FileReader();
-    reader.onload = e => {
-      mediaData.push({ type: file.type, src: e.target.result });
-      filesLoaded++;
-      if (filesLoaded === files.length) {
-        localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
-        alert(sectionId + ' media saved!');
-        
-        // ✅ Clear preview and reset file input
-        preview.innerHTML = '';
-        input.value = '';
-      }
-    };
-    reader.readAsDataURL(file);
-  });
+    function saveMedia(sectionId) {
+      const input = document.getElementById(sectionId + 'Media');
+      const preview = document.getElementById(sectionId + 'Preview');
+      const files = input.files;
+      const mediaData = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
+      let loaded = 0;
 
-  if (files.length === 0) alert('No files selected.');
-}
-
-
-    window.onload = () => {
-      ['cutting', 'welding'].forEach(section => {
-        const mediaContainer = document.getElementById(section + 'Preview');
-        const media = JSON.parse(localStorage.getItem(section + 'Media') || '[]');
-        media.forEach(item => {
-          const el = item.type.startsWith('video')
-            ? `<video controls src="${item.src}"></video>`
-            : `<img src="${item.src}" />`;
-          mediaContainer.innerHTML += el;
-        });
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          mediaData.push({ type: file.type, src: e.target.result });
+          loaded++;
+          if (loaded === files.length) {
+            localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
+            preview.innerHTML = '';
+            input.value = '';
+          }
+        };
+        reader.readAsDataURL(file);
       });
-    };
+
+      if (files.length === 0) alert('No files selected.');
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle('light');
+    }
   </script>
 </body>
 </html>
