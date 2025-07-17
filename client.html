@@ -3,8 +3,24 @@
 <head>
   <title>Client View</title>
   <style>
-    .section { margin-bottom: 1.5em; }
-    .media img, .media video { max-width: 200px; margin: 5px; }
+    body {
+      background-image: url('factory-bg.jpg');
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      color: white;
+      padding: 20px;
+    }
+    .section {
+      margin-bottom: 1.5em;
+      background-color: rgba(0,0,0,0.6);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .media img, .media video {
+      max-width: 200px;
+      margin: 5px;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
@@ -12,25 +28,26 @@
 
   <div class="section">
     <h3>Cutting</h3>
-    <p id="cuttingText"></p>
+    <div id="cuttingText"></div>
     <div id="cuttingMedia" class="media"></div>
   </div>
 
   <div class="section">
     <h3>Welding</h3>
-    <p id="weldingText"></p>
+    <div id="weldingText"></div>
     <div id="weldingMedia" class="media"></div>
   </div>
 
   <script>
-    function loadText(id) {
-      document.getElementById(id).innerText = localStorage.getItem(id) || 'No content';
+    function loadTexts(sectionId) {
+      const texts = JSON.parse(localStorage.getItem(sectionId + 'Texts') || '[]');
+      document.getElementById(sectionId + 'Text').innerHTML = texts.map(t => `<p>${t}</p>`).join('');
     }
 
-    function loadMedia(id) {
-      const container = document.getElementById(id);
+    function loadMedia(sectionId) {
+      const container = document.getElementById(sectionId + 'Media');
       container.innerHTML = '';
-      const media = JSON.parse(localStorage.getItem(id.replace('Media', 'Media')) || '[]');
+      const media = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
       media.forEach(item => {
         const el = item.type.startsWith('video')
           ? `<video controls src="${item.src}"></video>`
@@ -39,10 +56,10 @@
       });
     }
 
-    loadText('cuttingText');
-    loadText('weldingText');
-    loadMedia('cuttingMedia');
-    loadMedia('weldingMedia');
+    ['cutting', 'welding'].forEach(section => {
+      loadTexts(section);
+      loadMedia(section);
+    });
   </script>
 </body>
 </html>

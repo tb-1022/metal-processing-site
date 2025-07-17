@@ -3,8 +3,29 @@
 <head>
   <title>Admin Panel</title>
   <style>
-    .section { margin-bottom: 1.5em; }
-    .media img, .media video { max-width: 200px; margin: 5px; }
+    body {
+      background-image: url('metal-bg.gif');
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      color: white;
+      padding: 20px;
+    }
+    .section {
+      margin-bottom: 1.5em;
+      background-color: rgba(0,0,0,0.6);
+      padding: 15px;
+      border-radius: 10px;
+    }
+    .media img, .media video {
+      max-width: 200px;
+      margin: 5px;
+      border-radius: 10px;
+    }
+    button {
+      margin-top: 5px;
+      padding: 8px 16px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -14,17 +35,23 @@
   <button onclick="login()">Login</button>
 
   <div id="adminContent" style="display: none;">
-    <h3>Cutting</h3>
-    <textarea id="cuttingText" placeholder="Cutting description"></textarea><br>
-    <input type="file" id="cuttingMedia" multiple accept="image/*,video/*"><br>
-    <div id="cuttingPreview" class="media"></div>
+    <div class="section">
+      <h3>Cutting</h3>
+      <textarea id="cuttingText" placeholder="Cutting description"></textarea><br>
+      <input type="file" id="cuttingMedia" multiple accept="image/*,video/*"><br>
+      <div id="cuttingPreview" class="media"></div>
+      <button onclick="saveText('cutting')">Save Cutting Text</button>
+      <button onclick="saveMedia('cutting')">Save Cutting Media</button>
+    </div>
 
-    <h3>Welding</h3>
-    <textarea id="weldingText" placeholder="Welding description"></textarea><br>
-    <input type="file" id="weldingMedia" multiple accept="image/*,video/*"><br>
-    <div id="weldingPreview" class="media"></div>
-
-    <br><button onclick="saveData()">Save All</button>
+    <div class="section">
+      <h3>Welding</h3>
+      <textarea id="weldingText" placeholder="Welding description"></textarea><br>
+      <input type="file" id="weldingMedia" multiple accept="image/*,video/*"><br>
+      <div id="weldingPreview" class="media"></div>
+      <button onclick="saveText('welding')">Save Welding Text</button>
+      <button onclick="saveMedia('welding')">Save Welding Media</button>
+    </div>
   </div>
 
   <script>
@@ -45,39 +72,54 @@
       Array.from(input.files).forEach(file => {
         const reader = new FileReader();
         reader.onload = e => {
-          const media = file.type.startsWith('video') ?
-            `<video controls src="${e.target.result}"></video>` :
-            `<img src="${e.target.result}" />`;
+          const media = file.type.startsWith('video')
+            ? `<video controls src="${e.target.result}"></video>`
+            : `<img src="${e.target.result}" />`;
           preview.innerHTML += media;
         };
         reader.readAsDataURL(file);
       });
     }
 
-    document.getElementById('cuttingMedia').addEventListener('change', () => previewMedia('cuttingMedia', 'cuttingPreview'));
-    document.getElementById('weldingMedia').addEventListener('change', () => previewMedia('weldingMedia', 'weldingPreview'));
+    function saveText(sectionId) {
+      const textValue = document.getElementById(sectionId + 'Text').value;
+      const existing = JSON.parse(localStorage.getItem(sectionId + 'Texts') || '[]');
+      existing.push(textValue);
+      localStorage.setItem(sectionId + 'Texts', JSON.stringify(existing));
+      alert(sectionId + ' text saved!');
+    }
 
-    function saveData() {
-      localStorage.setItem('cuttingText', document.getElementById('cuttingText').value);
-      localStorage.setItem('weldingText', document.getElementById('weldingText').value);
+    function saveMedia(sectionId) {
+      const files = document.getElementById(sectionId + 'Media').files;
+      const mediaData = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
+      let filesLoaded = 0;
+      Array.from(files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = e => {
+          mediaData.push({ type: file.type, src: e.target.result });
+          filesLoaded++;
+          if (filesLoaded === files.length) {
+            localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
+            alert(sectionId + ' media saved!');
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      if (files.length === 0) alert('No files selected.');
+    }
 
-      ['cuttingMedia', 'weldingMedia'].forEach(id => {
-        const files = document.getElementById(id).files;
-        const mediaData = [];
-        Array.from(files).forEach(file => {
-          const reader = new FileReader();
-          reader.onload = e => {
-            mediaData.push({ type: file.type, src: e.target.result });
-            if (mediaData.length === files.length) {
-              localStorage.setItem(id, JSON.stringify(mediaData));
-            }
-          };
-          reader.readAsDataURL(file);
+    window.onload = () => {
+      ['cutting', 'welding'].forEach(section => {
+        const mediaContainer = document.getElementById(section + 'Preview');
+        const media = JSON.parse(localStorage.getItem(section + 'Media') || '[]');
+        media.forEach(item => {
+          const el = item.type.startsWith('video')
+            ? `<video controls src="${item.src}"></video>`
+            : `<img src="${item.src}" />`;
+          mediaContainer.innerHTML += el;
         });
       });
-
-      alert('Content saved successfully!');
-    }
+    };
   </script>
 </body>
 </html>
