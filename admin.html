@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -49,13 +48,15 @@
       box-shadow: 0 0 20px rgba(0,0,0,0.7);
       text-align: center;
       width: 400px;
+      overflow-y: auto;
+      max-height: 90vh;
     }
     .login-container img {
       width: 100px;
       border-radius: 50%;
       margin-bottom: 20px;
     }
-    input[type="text"], input[type="password"] {
+    input[type="text"], input[type="password"], input[type="file"], textarea {
       width: 100%;
       padding: 12px;
       margin: 10px 0;
@@ -76,13 +77,10 @@
       margin-top: 20px;
     }
     .section {
-      margin-bottom: 20px;
-    }
-    textarea {
-      width: 100%;
-      height: 100px;
+      margin-bottom: 30px;
+      background-color: rgba(255, 255, 255, 0.05);
       padding: 10px;
-      border-radius: 8px;
+      border-radius: 10px;
     }
     .media {
       display: flex;
@@ -109,13 +107,14 @@
       <script>
         const sections = ["cutting", "welding", "polishing", "coating"];
         document.write(sections.map(id => `
-          <h3>${id.charAt(0).toUpperCase() + id.slice(1)}</h3>
-          <div class="section">
-            <textarea id="${id}Text" placeholder="Enter ${id} Description"></textarea><br>
-            <input type="file" id="${id}Media" multiple><br>
-            <div id="${id}Preview" class="media"></div>
-            <button onclick="saveText('${id}')">Save Text</button>
-            <button onclick="saveMedia('${id}')">Save Media</button>
+          <div class="section" id="${id}Section">
+            <h3>${id.charAt(0).toUpperCase() + id.slice(1)}</h3>
+            <form onsubmit="saveSection(event, '${id}')">
+              <textarea placeholder="Enter ${id} Description" id="${id}Text"></textarea><br>
+              <input type="file" id="${id}Media" multiple><br>
+              <button type="submit">Save ${id.charAt(0).toUpperCase() + id.slice(1)}</button>
+            </form>
+            <div class="media" id="${id}Preview"></div>
           </div>
         `).join(''));
       </script>
@@ -133,36 +132,60 @@
       }
     }
 
-    function saveText(sectionId) {
+    function saveSection(e, sectionId) {
+      e.preventDefault();
       const text = document.getElementById(sectionId + 'Text').value;
-      const existing = JSON.parse(localStorage.getItem(sectionId + 'Texts') || '[]');
-      existing.push(text);
-      localStorage.setItem(sectionId + 'Texts', JSON.stringify(existing));
-      document.getElementById(sectionId + 'Text').value = '';
-    }
-
-    function saveMedia(sectionId) {
       const input = document.getElementById(sectionId + 'Media');
       const preview = document.getElementById(sectionId + 'Preview');
       const files = input.files;
+
+      // Save Text
+      const textData = JSON.parse(localStorage.getItem(sectionId + 'Texts') || '[]');
+      if (text.trim()) {
+        textData.push(text);
+        localStorage.setItem(sectionId + 'Texts', JSON.stringify(textData));
+      }
+
+      // Save Media
       const mediaData = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
       let loaded = 0;
 
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          mediaData.push({ type: file.type, src: e.target.result });
-          loaded++;
-          if (loaded === files.length) {
-            localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
-            preview.innerHTML = '';
-            input.value = '';
-          }
-        };
-        reader.readAsDataURL(file);
-      });
+      if (files.length > 0) {
+        Array.from(files).forEach(file => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            mediaData.push({ type: file.type, src: e.target.result });
+            loaded++;
+            if (loaded === files.length) {
+              localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
+              renderPreview(preview, mediaData);
+            }
+          };
+          reader.readAsDataURL(file);
+        });
+      } else {
+        renderPreview(preview, mediaData);
+      }
 
-      if (files.length === 0) alert('No files selected.');
+      // Reset form
+      document.getElementById(sectionId + 'Text').value = '';
+      input.value = '';
+    }
+
+    function renderPreview(container, items) {
+      container.innerHTML = '';
+      items.forEach(item => {
+        if (item.type.startsWith("image/")) {
+          const img = document.createElement("img");
+          img.src = item.src;
+          container.appendChild(img);
+        } else if (item.type.startsWith("video/")) {
+          const video = document.createElement("video");
+          video.src = item.src;
+          video.controls = true;
+          container.appendChild(video);
+        }
+      });
     }
 
     function toggleMode() {
