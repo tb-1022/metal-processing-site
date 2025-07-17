@@ -3,30 +3,81 @@
 <head>
   <title>Admin Panel</title>
   <style>
-    body {
-      background-image: url('metal-bg.gif');
-      background-size: cover;
-      font-family: Arial, sans-serif;
-      color: white;
-      padding: 20px;
-    }
-    .section {
-      margin-bottom: 1.5em;
-      background-color: rgba(0,0,0,0.6);
-      padding: 15px;
-      border-radius: 10px;
-    }
-    .media img, .media video {
-      max-width: 200px;
-      margin: 5px;
-      border-radius: 10px;
-    }
-    button {
-      margin-top: 5px;
-      padding: 8px 16px;
-      font-weight: bold;
-    }
-  </style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-image: url('background.jpg');
+    background-size: cover;
+    margin: 0;
+    padding: 40px;
+    color: #fff;
+  }
+
+  .container {
+    background-color: rgba(0, 0, 0, 0.75);
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 1000px;
+    margin: auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.7);
+  }
+
+  h2, h3 {
+    text-align: center;
+    border-bottom: 1px solid #555;
+    padding-bottom: 8px;
+  }
+
+  textarea {
+    width: 100%;
+    height: 100px;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 8px;
+    border: none;
+    resize: vertical;
+    font-size: 16px;
+  }
+
+  input[type="file"] {
+    margin: 10px 0;
+  }
+
+  button {
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    margin: 10px 5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #2980b9;
+  }
+
+  .media {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .media img,
+  .media video {
+    max-width: 200px;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(255,255,255,0.3);
+  }
+
+  .section {
+    margin-bottom: 30px;
+  }
+</style>
+
 </head>
 <body>
   <h2>Admin Login</h2>
@@ -89,24 +140,33 @@
       alert(sectionId + ' text saved!');
     }
 
-    function saveMedia(sectionId) {
-      const files = document.getElementById(sectionId + 'Media').files;
-      const mediaData = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
-      let filesLoaded = 0;
-      Array.from(files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = e => {
-          mediaData.push({ type: file.type, src: e.target.result });
-          filesLoaded++;
-          if (filesLoaded === files.length) {
-            localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
-            alert(sectionId + ' media saved!');
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-      if (files.length === 0) alert('No files selected.');
-    }
+ function saveMedia(sectionId) {
+  const input = document.getElementById(sectionId + 'Media');
+  const preview = document.getElementById(sectionId + 'Preview');
+  const files = input.files;
+  const mediaData = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
+  
+  let filesLoaded = 0;
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      mediaData.push({ type: file.type, src: e.target.result });
+      filesLoaded++;
+      if (filesLoaded === files.length) {
+        localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
+        alert(sectionId + ' media saved!');
+        
+        // ✅ Clear preview and reset file input
+        preview.innerHTML = '';
+        input.value = '';
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  if (files.length === 0) alert('No files selected.');
+}
+
 
     window.onload = () => {
       ['cutting', 'welding'].forEach(section => {

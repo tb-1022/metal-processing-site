@@ -3,24 +3,46 @@
 <head>
   <title>Client View</title>
   <style>
-    body {
-      background-image: url('factory-bg.jpg');
-      background-size: cover;
-      font-family: Arial, sans-serif;
-      color: white;
-      padding: 20px;
-    }
-    .section {
-      margin-bottom: 1.5em;
-      background-color: rgba(0,0,0,0.6);
-      padding: 15px;
-      border-radius: 10px;
-    }
-    .media img, .media video {
-      max-width: 200px;
-      margin: 5px;
-      border-radius: 10px;
-    }
+   body {
+  background-image: url('factory-bg.jpg');
+  background-size: cover;
+  font-family: Arial, sans-serif;
+  color: white;
+  padding: 40px;
+  margin: 0;
+}
+
+.section {
+  margin-bottom: 2em;
+  background-color: rgba(0,0,0,0.7);
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+
+.section h3 {
+  border-bottom: 1px solid #999;
+  padding-bottom: 5px;
+  margin-bottom: 10px;
+}
+
+.media {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 15px;
+}
+
+.media img,
+.media video {
+  max-width: 200px;
+  border-radius: 8px;
+  box-shadow: 0 0 5px rgba(255,255,255,0.3);
+}
+
   </style>
 </head>
 <body>
