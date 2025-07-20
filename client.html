@@ -92,6 +92,11 @@
       renderPagination(filtered.length);
     }
 
+	window.onload = () => {
+  renderCards();
+};
+	
+
     function renderPagination(totalItems) {
       const totalPages = Math.ceil(totalItems / itemsPerPage);
       const pagination = document.getElementById("pagination");
