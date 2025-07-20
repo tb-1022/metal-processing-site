@@ -34,17 +34,42 @@
       sections.forEach(id => {
         const div = document.createElement("div");
         div.className = "card";
-        div.innerHTML = `
-          <h3>\${id.charAt(0).toUpperCase() + id.slice(1)}</h3>
-          <form onsubmit="saveSection(event, '\${id}')">
-            <textarea id="\${id}Text" placeholder="Enter Description"></textarea><br>
-            <input type="file" id="\${id}Media" multiple><br>
-            <button type="submit">Save</button>
-          </form>
-          <div class="media" id="\${id}Preview"></div>
-        `;
+
+        const h3 = document.createElement("h3");
+        h3.textContent = id.charAt(0).toUpperCase() + id.slice(1);
+        div.appendChild(h3);
+
+        const form = document.createElement("form");
+        form.onsubmit = e => saveSection(e, id);
+
+        const textarea = document.createElement("textarea");
+        textarea.id = id + "Text";
+        textarea.placeholder = "Enter Description";
+
+        const input = document.createElement("input");
+        input.type = "file";
+        input.id = id + "Media";
+        input.multiple = true;
+
+        const button = document.createElement("button");
+        button.type = "submit";
+        button.textContent = "Save";
+
+        const preview = document.createElement("div");
+        preview.className = "media";
+        preview.id = id + "Preview";
+
+        form.appendChild(textarea);
+        form.appendChild(document.createElement("br"));
+        form.appendChild(input);
+        form.appendChild(document.createElement("br"));
+        form.appendChild(button);
+
+        div.appendChild(form);
+        div.appendChild(preview);
+
         container.appendChild(div);
-        renderPreview(document.getElementById(id + "Preview"), JSON.parse(localStorage.getItem(id + "Media") || "[]"));
+        renderPreview(preview, JSON.parse(localStorage.getItem(id + "Media") || "[]"));
       });
     };
 
