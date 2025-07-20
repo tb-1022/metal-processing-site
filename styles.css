@@ -97,8 +97,9 @@ button.delete {
 
 .logout {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  padding: 5px 14px;
+  top: 25px;
+  right: 130px;
   font-size: 0.9rem;
   background: #e74c3c;
 }
