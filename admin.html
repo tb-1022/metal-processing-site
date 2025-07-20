@@ -1,178 +1,104 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Panel - Metal Processing</title>
-  <style>
-    :root {
-      --bg: #000;
-      --text: #fff;
-      --card: rgba(0, 0, 0, 0.8);
-      --btn: #3498db;
-    }
-    body.light {
-      --bg: #f0f0f0;
-      --text: #111;
-      --card: #fff;
-      --btn: #007acc;
-    }
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-image: url('bg1.jpg');
-      background-size: cover;
-      background-position: center;
-      margin: 0;
-      padding: 40px;
-      background-color: var(--bg);
-      color: var(--text);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .toggle-mode {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      cursor: pointer;
-      background: var(--btn);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 8px;
-    }
-    .login-container {
-      background-color: var(--card);
-      padding: 30px;
-      border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.7);
-      text-align: center;
-      width: 400px;
-      overflow-y: auto;
-      max-height: 90vh;
-    }
-    .login-container img {
-      width: 100px;
-      border-radius: 50%;
-      margin-bottom: 20px;
-    }
-    input[type="text"], input[type="password"], input[type="file"], textarea {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border: none;
-      border-radius: 8px;
-    }
-    button {
-      background-color: var(--btn);
-      color: white;
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .content-section {
-      display: none;
-      margin-top: 20px;
-    }
-    .section {
-      margin-bottom: 30px;
-      background-color: rgba(255, 255, 255, 0.05);
-      padding: 10px;
-      border-radius: 10px;
-    }
-    .media {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 10px;
-    }
-    .media img, .media video {
-      max-width: 150px;
-      border-radius: 6px;
-    }
-  </style>
+  <title>MetalForge Admin Panel</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <div class="toggle-mode" onclick="toggleMode()">Toggle Dark/Light</div>
-  <div class="login-container">
-    <img src="bg1.jpg" alt="Admin ">
-    <h2>Admin Login</h2>
-    <input type="text" id="username" placeholder="Username">
-    <input type="password" id="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-	<button onclick="logout()">Logout</button>
+<body class="dark">
+  <header>
+    <div class="logo">MetalForge Admin</div>
+    <button class="toggle-mode" onclick="toggleMode()">Toggle Mode</button>
+  </header>
+  <button class="logout" onclick="logout()">Logout</button>
 
-    <div class="content-section" id="adminContent">
-      <script>
-        const sections = ["cutting", "welding", "polishing", "coating"];
-        document.write(sections.map(id => `
-          <div class="section" id="${id}Section">
-            <h3>${id.charAt(0).toUpperCase() + id.slice(1)}</h3>
-            <form onsubmit="saveSection(event, '${id}')">
-              <textarea placeholder="Enter ${id} Description" id="${id}Text"></textarea><br>
-              <input type="file" id="${id}Media" multiple><br>
-              <button type="submit">Save ${id.charAt(0).toUpperCase() + id.slice(1)}</button>
-            </form>
-            <div class="media" id="${id}Preview"></div>
-          </div>
-        `).join(''));
-      </script>
-    </div>
+  <div class="container" id="loginSection">
+    <h2>Admin Login</h2>
+    <input type="text" id="username" placeholder="Username" />
+    <input type="password" id="password" placeholder="Password" />
+    <button onclick="login()">Login</button>
+  </div>
+
+  <div class="container" id="adminContent" style="display:none">
+    <h2>Upload Metal Processing Content</h2>
+    <div id="sectionsContainer"></div>
   </div>
 
   <script>
+    const sections = ["cutting", "welding", "polishing", "coating"];
+
+    window.onload = () => {
+      const container = document.getElementById("sectionsContainer");
+      sections.forEach(id => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = `
+          <h3>\${id.charAt(0).toUpperCase() + id.slice(1)}</h3>
+          <form onsubmit="saveSection(event, '\${id}')">
+            <textarea id="\${id}Text" placeholder="Enter Description"></textarea><br>
+            <input type="file" id="\${id}Media" multiple><br>
+            <button type="submit">Save</button>
+          </form>
+          <div class="media" id="\${id}Preview"></div>
+        `;
+        container.appendChild(div);
+        renderPreview(document.getElementById(id + "Preview"), JSON.parse(localStorage.getItem(id + "Media") || "[]"));
+      });
+    };
+
     function login() {
-  const user = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-  if (user === "admin" && pass === "1234") {
-    document.getElementById("adminContent").style.display = "block";
-    localStorage.setItem("isAdmin", "true"); // Store admin status
-  } else {
-    alert("Incorrect credentials!");
-  }
-}
+      const user = document.getElementById("username").value;
+      const pass = document.getElementById("password").value;
+      if (user === "admin" && pass === "1234") {
+        localStorage.setItem("isAdmin", "true");
+        document.getElementById("loginSection").style.display = "none";
+        document.getElementById("adminContent").style.display = "block";
+      } else {
+        alert("Incorrect credentials!");
+      }
+    }
 
+    function logout() {
+      localStorage.removeItem("isAdmin");
+      window.location.href = "index.html";
+    }
 
-    function saveSection(e, sectionId) {
+    function saveSection(e, id) {
       e.preventDefault();
-      const text = document.getElementById(sectionId + 'Text').value;
-      const input = document.getElementById(sectionId + 'Media');
-      const preview = document.getElementById(sectionId + 'Preview');
-      const files = input.files;
+      const text = document.getElementById(id + 'Text').value.trim();
+      const mediaInput = document.getElementById(id + 'Media');
+      const preview = document.getElementById(id + 'Preview');
 
-      // Save Text
-      const textData = JSON.parse(localStorage.getItem(sectionId + 'Texts') || '[]');
-      if (text.trim()) {
-        textData.push(text);
-        localStorage.setItem(sectionId + 'Texts', JSON.stringify(textData));
+      if (text) {
+        const texts = JSON.parse(localStorage.getItem(id + 'Texts') || '[]');
+        texts.push(text);
+        localStorage.setItem(id + 'Texts', JSON.stringify(texts));
       }
 
-      // Save Media
-      const mediaData = JSON.parse(localStorage.getItem(sectionId + 'Media') || '[]');
+      const files = mediaInput.files;
+      const media = JSON.parse(localStorage.getItem(id + 'Media') || '[]');
       let loaded = 0;
-
       if (files.length > 0) {
         Array.from(files).forEach(file => {
           const reader = new FileReader();
           reader.onload = e => {
-            mediaData.push({ type: file.type, src: e.target.result });
+            media.push({ type: file.type, src: e.target.result });
             loaded++;
             if (loaded === files.length) {
-              localStorage.setItem(sectionId + 'Media', JSON.stringify(mediaData));
-              renderPreview(preview, mediaData);
+              localStorage.setItem(id + 'Media', JSON.stringify(media));
+              renderPreview(preview, media);
             }
           };
           reader.readAsDataURL(file);
         });
       } else {
-        renderPreview(preview, mediaData);
+        renderPreview(preview, media);
       }
 
-      // Reset form
-      document.getElementById(sectionId + 'Text').value = '';
-      input.value = '';
+      document.getElementById(id + 'Text').value = '';
+      mediaInput.value = '';
     }
 
     function renderPreview(container, items) {
@@ -192,14 +118,9 @@
     }
 
     function toggleMode() {
-      document.body.classList.toggle('light');
+      document.body.classList.toggle("light");
+      document.body.classList.toggle("dark");
     }
-function logout() {
-  localStorage.removeItem("isAdmin"); // Clear admin status
-  alert("Logged out.");
-  window.location.reload(); // Optional: refresh the page
-}
-
   </script>
 </body>
 </html>

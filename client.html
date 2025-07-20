@@ -1,150 +1,135 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Client View - Metal Processing</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      margin: 0;
-      padding: 20px;
-      background: #1e1e1e;
-      color: #fff;
-    }
-    h1 {
-      text-align: center;
-    }
-    #searchBar {
-      width: 100%;
-      padding: 12px;
-      margin: 20px 0;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
-    }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 20px;
-    }
-    .card {
-      background: #2c2c2c;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 0 10px #000;
-      overflow: hidden;
-    }
-    .card p {
-      margin-bottom: 12px;
-    }
-    .media {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .media img, .media video {
-      max-width: 100%;
-      max-height: 150px;
-      border-radius: 8px;
-    }
-    .pagination {
-      margin-top: 20px;
-      text-align: center;
-    }
-    .pagination button {
-      margin: 0 5px;
-      padding: 8px 16px;
-      background: #3498db;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-    .delete-btn {
-      margin-top: 10px;
-      background: crimson;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MetalForge Client View</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <h1>Metal Processing - Client View</h1>
-  <input type="text" id="searchBar" placeholder="Search text..." oninput="renderContent()" />
-  <div class="card-grid" id="cardGrid"></div>
-  <div class="pagination" id="paginationControls"></div>
+<body class="dark">
+  <header>
+    <div class="logo">MetalForge</div>
+    <button class="toggle-mode" onclick="toggleMode()">Toggle Mode</button>
+  </header>
+  <button class="logout" onclick="logout()">Logout</button>
+
+  <div class="container">
+    <input type="text" id="searchInput" placeholder="Search content..." oninput="renderCards()"/>
+    <div class="card-grid" id="cardContainer"></div>
+    <div id="pagination" style="margin-top: 20px; text-align: center;"></div>
+  </div>
 
   <script>
     const sections = ["cutting", "welding", "polishing", "coating"];
-    const admin = localStorage.getItem("isAdmin") === "true";
-    const itemsPerPage = 6;
-    let currentPage = 1;
     let allItems = [];
+    let currentPage = 1;
+    const itemsPerPage = 6;
 
-    function loadData() {
+    const isAdmin = localStorage.getItem("isAdmin") === "true";
+
+    function collectData() {
       allItems = [];
       sections.forEach(section => {
-        const texts = JSON.parse(localStorage.getItem(section + "Texts") || "[]");
-        const media = JSON.parse(localStorage.getItem(section + "Media") || "[]");
-        texts.forEach((text, i) => {
-          allItems.push({
-            section,
-            text,
-            media: media.slice(i * 3, i * 3 + 3),
-            index: i
-          });
+        const texts = JSON.parse(localStorage.getItem(section + 'Texts') || '[]');
+        const media = JSON.parse(localStorage.getItem(section + 'Media') || '[]');
+        texts.forEach(text => {
+          allItems.push({ type: "text", content: text, section });
+        });
+        media.forEach(m => {
+          allItems.push({ type: m.type.includes("video") ? "video" : "image", src: m.src, section });
         });
       });
     }
 
-    function renderContent() {
-      const query = document.getElementById("searchBar").value.toLowerCase();
-      const filtered = allItems.filter(item => item.text.toLowerCase().includes(query));
-      const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    function renderCards() {
+      collectData();
+      const container = document.getElementById("cardContainer");
+      container.innerHTML = "";
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      const filtered = allItems.filter(item =>
+        item.content?.toLowerCase().includes(search) || item.section.includes(search)
+      );
+
       const start = (currentPage - 1) * itemsPerPage;
       const end = start + itemsPerPage;
-      const itemsToShow = filtered.slice(start, end);
+      const pageItems = filtered.slice(start, end);
 
-      const grid = document.getElementById("cardGrid");
-      grid.innerHTML = itemsToShow.map(item => `
-        <div class="card">
-          <h3>${item.section.toUpperCase()}</h3>
-          <p>${item.text}</p>
-          <div class="media">
-            ${item.media.map(m =>
-              m.type.startsWith("image")
-                ? `<img src="${m.src}">`
-                : `<video src="${m.src}" controls></video>`
-            ).join("")}
-          </div>
-          ${admin ? `<button class="delete-btn" onclick="deleteItem('${item.section}', ${item.index})">Delete</button>` : ""}
-        </div>
-      `).join("");
+      pageItems.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "card";
 
-      const pagination = document.getElementById("paginationControls");
-      pagination.innerHTML = Array.from({ length: totalPages }, (_, i) => `
-        <button onclick="goToPage(${i + 1})">${i + 1}</button>
-      `).join("");
+        const h3 = document.createElement("h3");
+        h3.textContent = item.section.toUpperCase();
+        card.appendChild(h3);
+
+        if (item.type === "text") {
+          const p = document.createElement("p");
+          p.textContent = item.content;
+          card.appendChild(p);
+        } else if (item.type === "image") {
+          const img = document.createElement("img");
+          img.src = item.src;
+          card.appendChild(img);
+        } else if (item.type === "video") {
+          const video = document.createElement("video");
+          video.src = item.src;
+          video.controls = true;
+          card.appendChild(video);
+        }
+
+        if (isAdmin) {
+          const btn = document.createElement("button");
+          btn.textContent = "Delete";
+          btn.className = "delete";
+          btn.onclick = () => deleteItem(item);
+          card.appendChild(btn);
+        }
+
+        container.appendChild(card);
+      });
+
+      renderPagination(filtered.length);
     }
 
-    function goToPage(page) {
-      currentPage = page;
-      renderContent();
+    function renderPagination(totalItems) {
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const pagination = document.getElementById("pagination");
+      pagination.innerHTML = "";
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.textContent = i;
+        btn.onclick = () => {
+          currentPage = i;
+          renderCards();
+        };
+        pagination.appendChild(btn);
+      }
     }
 
-    function deleteItem(section, index) {
-      if (!admin) return;
-      const texts = JSON.parse(localStorage.getItem(section + "Texts") || "[]");
-      const media = JSON.parse(localStorage.getItem(section + "Media") || "[]");
-      texts.splice(index, 1);
-      media.splice(index * 3, 3);
-      localStorage.setItem(section + "Texts", JSON.stringify(texts));
-      localStorage.setItem(section + "Media", JSON.stringify(media));
-      loadData();
-      renderContent();
+    function deleteItem(item) {
+      const key = item.type === "text" ? item.section + "Texts" : item.section + "Media";
+      const items = JSON.parse(localStorage.getItem(key) || "[]");
+      const updated = items.filter(entry => {
+        if (item.type === "text") return entry !== item.content;
+        return entry.src !== item.src;
+      });
+      localStorage.setItem(key, JSON.stringify(updated));
+      renderCards();
     }
 
-    loadData();
-    renderContent();
+    function logout() {
+      localStorage.removeItem("isAdmin");
+      window.location.href = "index.html";
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
+      document.body.classList.toggle("dark");
+    }
+
+    renderCards();
   </script>
 </body>
 </html>
