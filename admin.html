@@ -97,11 +97,12 @@
 <body>
   <div class="toggle-mode" onclick="toggleMode()">Toggle Dark/Light</div>
   <div class="login-container">
-    <img src="bg1.jpg" alt="Admin">
+    <img src="bg1.jpg" alt="Admin ">
     <h2>Admin Login</h2>
     <input type="text" id="username" placeholder="Username">
     <input type="password" id="password" placeholder="Password">
     <button onclick="login()">Login</button>
+	<button onclick="logout()">Logout</button>
 
     <div class="content-section" id="adminContent">
       <script>
@@ -123,14 +124,16 @@
 
   <script>
     function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      if (user === "admin" && pass === "1234") {
-        document.getElementById("adminContent").style.display = "block";
-      } else {
-        alert("Incorrect credentials!");
-      }
-    }
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+  if (user === "admin" && pass === "1234") {
+    document.getElementById("adminContent").style.display = "block";
+    localStorage.setItem("isAdmin", "true"); // Store admin status
+  } else {
+    alert("Incorrect credentials!");
+  }
+}
+
 
     function saveSection(e, sectionId) {
       e.preventDefault();
@@ -191,6 +194,12 @@
     function toggleMode() {
       document.body.classList.toggle('light');
     }
+function logout() {
+  localStorage.removeItem("isAdmin"); // Clear admin status
+  alert("Logged out.");
+  window.location.reload(); // Optional: refresh the page
+}
+
   </script>
 </body>
 </html>
