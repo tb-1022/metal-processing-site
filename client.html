@@ -3,108 +3,109 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MetalForge Client View</title>
-  <link rel="stylesheet" href="styles.css">
+  <title>Client View - MetalForge</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="dark">
   <header>
-  <div class="logo">
-    <img src="logo-placeholder.png" alt="Logo" />
-    MetalForge
-  </div>
-  <div class="header-actions">
+    <div class="logo">
+      <img src="logo-placeholder.png" alt="Logo" />
+      MetalForge Client
+    </div>
     <button class="toggle-mode" onclick="toggleMode()">Toggle Mode</button>
-    <button class="logout" onclick="logout()">Logout</button>
-  </div>
-</header>
+  </header>
 
-
-  <button class="logout" onclick="logout()">Logout</button>
+  <!-- Logout button (admin only) -->
+  <button class="logout" onclick="logout()" style="display:none;">Logout</button>
 
   <div class="container">
-    <input type="text" id="searchInput" placeholder="Search content..." oninput="renderCards()"/>
-    <div class="card-grid" id="cardContainer"></div>
-    <div id="pagination" style="margin-top: 20px; text-align: center;"></div>
+    <input type="text" id="searchInput" placeholder="Search content..." />
+
+    <div id="cardsContainer" class="card-grid"></div>
+    <div id="pagination" style="text-align:center; margin-top:20px;"></div>
   </div>
 
   <script>
-    const sections = ["cutting", "welding", "polishing", "coating"];
-    let allItems = [];
-    let currentPage = 1;
     const itemsPerPage = 6;
+    let currentPage = 1;
 
     const isAdmin = localStorage.getItem("isAdmin") === "true";
 
-    function collectData() {
-      allItems = [];
-      sections.forEach(section => {
-        const texts = JSON.parse(localStorage.getItem(section + 'Texts') || '[]');
-        const media = JSON.parse(localStorage.getItem(section + 'Media') || '[]');
-        texts.forEach(text => {
-          allItems.push({ type: "text", content: text, section });
-        });
-        media.forEach(m => {
-          allItems.push({ type: m.type.includes("video") ? "video" : "image", src: m.src, section });
-        });
-      });
-    }
-
     function renderCards() {
-      collectData();
-      const container = document.getElementById("cardContainer");
-      container.innerHTML = "";
+      const container = document.getElementById("cardsContainer");
       const search = document.getElementById("searchInput").value.toLowerCase();
-      const filtered = allItems.filter(item =>
-        (item.content && item.content.toLowerCase().includes(search)) || item.section.includes(search)
-      );
+      container.innerHTML = "";
+      let allItems = [];
 
-      const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const pageItems = filtered.slice(start, end);
+      const sections = ["cutting", "welding", "polishing", "coating"];
+      sections.forEach(section => {
+        const texts = JSON.parse(localStorage.getItem(section + "Texts") || "[]").map(content => ({
+          section,
+          type: "text",
+          content
+        }));
+        const media = JSON.parse(localStorage.getItem(section + "Media") || "[]").map(media => ({
+          section,
+          ...media
+        }));
+        allItems = allItems.concat(texts, media);
+      });
 
-      pageItems.forEach((item, index) => {
+      // Filter
+      if (search) {
+        allItems = allItems.filter(item =>
+          (item.content && item.content.toLowerCase().includes(search)) ||
+          item.section.toLowerCase().includes(search)
+        );
+      }
+
+      // Pagination
+      const totalPages = Math.ceil(allItems.length / itemsPerPage);
+      const paginatedItems = allItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+      paginatedItems.forEach((item, index) => {
         const card = document.createElement("div");
         card.className = "card";
 
-        const h3 = document.createElement("h3");
-        h3.textContent = item.section.toUpperCase();
-        card.appendChild(h3);
+        const title = document.createElement("h3");
+        title.textContent = item.section.toUpperCase();
+        card.appendChild(title);
 
         if (item.type === "text") {
-  const p = document.createElement("p");
-  p.textContent = item.content;
-  card.appendChild(p);
-} else if (item.src && (item.type.startsWith("image/"))) {
-  const img = document.createElement("img");
-  img.src = item.src;
-  card.appendChild(img);
-} else if (item.src && item.type.startsWith("video/")) {
-  const video = document.createElement("video");
-  video.src = item.src;
-  video.controls = true;
-  card.appendChild(video);
-}
+          const p = document.createElement("p");
+          p.textContent = item.content;
+          card.appendChild(p);
+        } else if (item.src && item.type.startsWith("image/")) {
+          const img = document.createElement("img");
+          img.src = item.src;
+          card.appendChild(img);
+        } else if (item.src && item.type.startsWith("video/")) {
+          const video = document.createElement("video");
+          video.src = item.src;
+          video.controls = true;
+          card.appendChild(video);
+        }
 
-
+        // Admin-only delete button
         if (isAdmin) {
-          const btn = document.createElement("button");
-          btn.textContent = "Delete";
-          btn.className = "delete";
-          btn.onclick = () => deleteItem(item);
-          card.appendChild(btn);
+          const delBtn = document.createElement("button");
+          delBtn.className = "delete";
+          delBtn.textContent = "Delete";
+          delBtn.onclick = () => {
+            deleteItem(item);
+          };
+          card.appendChild(delBtn);
         }
 
         container.appendChild(card);
       });
 
-      renderPagination(filtered.length);
+      renderPagination(totalPages);
     }
 
-    function renderPagination(totalItems) {
-      const totalPages = Math.ceil(totalItems / itemsPerPage);
+    function renderPagination(totalPages) {
       const pagination = document.getElementById("pagination");
       pagination.innerHTML = "";
-
       for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement("button");
         btn.textContent = i;
@@ -112,19 +113,32 @@
           currentPage = i;
           renderCards();
         };
+        if (i === currentPage) {
+          btn.style.background = "#3498db";
+          btn.style.color = "white";
+        }
         pagination.appendChild(btn);
       }
     }
 
-    function deleteItem(item) {
-      const key = item.type === "text" ? item.section + "Texts" : item.section + "Media";
-      const items = JSON.parse(localStorage.getItem(key) || "[]");
-      const updated = items.filter(entry => {
-        if (item.type === "text") return entry !== item.content;
-        return entry.src !== item.src;
+    function deleteItem(itemToDelete) {
+      const key = itemToDelete.type === "text" ? itemToDelete.section + "Texts" : itemToDelete.section + "Media";
+      const list = JSON.parse(localStorage.getItem(key) || "[]");
+
+      const updatedList = list.filter(item => {
+        if (itemToDelete.type === "text") {
+          return item !== itemToDelete.content;
+        } else {
+          return item.src !== itemToDelete.src;
+        }
       });
-      localStorage.setItem(key, JSON.stringify(updated));
+
+      localStorage.setItem(key, JSON.stringify(updatedList));
       renderCards();
+    }
+
+    function toggleMode() {
+      document.body.classList.toggle("light");
     }
 
     function logout() {
@@ -132,13 +146,17 @@
       window.location.href = "index.html";
     }
 
-    function toggleMode() {
-      document.body.classList.toggle("light");
-      document.body.classList.toggle("dark");
-    }
+    // Events
+    document.getElementById("searchInput").addEventListener("input", () => {
+      currentPage = 1;
+      renderCards();
+    });
 
     window.onload = () => {
       renderCards();
+      if (isAdmin) {
+        document.querySelector(".logout").style.display = "block";
+      }
     };
   </script>
 </body>
