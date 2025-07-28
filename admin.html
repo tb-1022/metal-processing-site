@@ -12,10 +12,14 @@
     <img src="logo-placeholder.png" alt="Logo" />
     MetalForge
   </div>
-  <button class="toggle-mode" onclick="toggleMode()">Toggle Mode</button>
+  <div class="header-actions">
+    <button class="toggle-mode" onclick="toggleMode()">Toggle Mode</button>
+    <button class="logout" onclick="logout()">Logout</button>
+  </div>
 </header>
 
-  <button class="logout" onclick="logout()">Logout</button>
+<button class="logout" onclick="logout()" style="display:none;">Logout</button>
+
 
   <div class="container" id="loginSection">
     <h2>Admin Login</h2>
@@ -77,16 +81,18 @@
     };
 
     function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      if (user === "admin" && pass === "1234") {
-        localStorage.setItem("isAdmin", "true");
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("adminContent").style.display = "block";
-      } else {
-        alert("Incorrect credentials!");
-      }
-    }
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+  if (user === "admin" && pass === "1234") {
+    localStorage.setItem("isAdmin", "true");
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("adminContent").style.display = "block";
+    document.querySelector(".logout").style.display = "block";
+  } else {
+    alert("Incorrect credentials!");
+  }
+}
+
 
     function logout() {
       localStorage.removeItem("isAdmin");
