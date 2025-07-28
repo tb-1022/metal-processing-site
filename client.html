@@ -70,7 +70,20 @@
         h3.textContent = item.section.toUpperCase();
         card.appendChild(h3);
 
-        media.push({ type: file.type, src: e.target.result });
+        if (item.type === "text") {
+  const p = document.createElement("p");
+  p.textContent = item.content;
+  card.appendChild(p);
+} else if (item.src && (item.type.startsWith("image/"))) {
+  const img = document.createElement("img");
+  img.src = item.src;
+  card.appendChild(img);
+} else if (item.src && item.type.startsWith("video/")) {
+  const video = document.createElement("video");
+  video.src = item.src;
+  video.controls = true;
+  card.appendChild(video);
+}
 
 
         if (isAdmin) {
