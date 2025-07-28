@@ -70,20 +70,8 @@
         h3.textContent = item.section.toUpperCase();
         card.appendChild(h3);
 
-        if (item.type === "text") {
-          const p = document.createElement("p");
-          p.textContent = item.content;
-          card.appendChild(p);
-        } else if (item.type === "image") {
-          const img = document.createElement("img");
-          img.src = item.src;
-          card.appendChild(img);
-        } else if (item.type === "video") {
-          const video = document.createElement("video");
-          video.src = item.src;
-          video.controls = true;
-          card.appendChild(video);
-        }
+        media.push({ type: file.type, src: e.target.result });
+
 
         if (isAdmin) {
           const btn = document.createElement("button");
