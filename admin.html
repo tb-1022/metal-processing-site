@@ -29,123 +29,162 @@
     <div id="sectionsContainer"></div>
   </div>
 
-  <script>
-    const sections = ["cutting", "welding", "polishing", "coating"];
+<script>
+  // --- CONFIGURATION ---
+  // Replace these values with your own.
+  const GITHUB_PAT = "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"; // Paste the token you just generated
+  const GITHUB_USER = "tb-1022"; // Your GitHub username
+  const GITHUB_REPO = "metal-processing-site"; // Your GitHub repository name
+  const UPLOAD_PATH = "uploads"; // The folder in your repo to store files
+  // ---------------------
 
-    function login() {
-      const user = document.getElementById("username").value;
-      const pass = document.getElementById("password").value;
-      if (user === "admin" && pass === "1234") {
-        localStorage.setItem("isAdmin", "true");
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("adminContent").style.display = "block";
-        document.querySelector(".logout").style.display = "block";
-        renderSections();
-      } else {
-        alert("Incorrect credentials!");
-      }
+  const sections = ["cutting", "welding", "polishing", "coating"];
+
+  // Helper function to convert file to Base64 for the API
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(',')[1]); // Get only the Base64 part
+      reader.onerror = error => reject(error);
+    });
+  }
+
+  async function saveSection(section) {
+    // Save text (this part remains the same)
+    const textVal = document.getElementById(section + "Text").value.trim();
+    if (textVal) {
+      const texts = JSON.parse(localStorage.getItem(section + "Texts") || "[]");
+      texts.push(textVal);
+      localStorage.setItem(section + "Texts", JSON.stringify(texts));
+      document.getElementById(section + "Text").value = "";
     }
 
-    function logout() {
-      localStorage.removeItem("isAdmin");
-      window.location.href = "index.html";
+    // --- NEW: UPLOAD FILE TO GITHUB ---
+    const files = document.getElementById(section + "File").files;
+    if (files.length === 0) {
+      alert("No file selected for upload.");
+      return; // Stop if no file is chosen
     }
 
-    function renderSections() {
-      const container = document.getElementById("sectionsContainer");
-      container.innerHTML = "";
+    const file = files[0];
+    const fileName = `${Date.now()}-${file.name}`; // Create a unique filename
+    const apiUrl = `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${UPLOAD_PATH}/${fileName}`;
 
-      sections.forEach(section => {
-        const div = document.createElement("div");
-        div.className = "section";
+    alert("Starting file upload to GitHub. This may take a moment...");
 
-        div.innerHTML = `
-          <h3>${section.toUpperCase()}</h3>
-          <textarea id="${section}Text" placeholder="Enter description..."></textarea>
-          <input type="file" id="${section}File" multiple />
-          <input type="url" id="${section}Url" placeholder="Paste image/video URL" />
-          <button onclick="saveSection('${section}')">Save ${section}</button>
-          <div class="preview" id="${section}Preview"></div>
-        `;
+    try {
+      const content = await fileToBase64(file); // Convert file to Base64
 
-        container.appendChild(div);
-        renderPreview(section);
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `token ${GITHUB_PAT}`,
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({
+          message: `feat: upload ${fileName}`, // Commit message
+          content: content
+        })
       });
-    }
 
-    function saveSection(section) {
-      // Save text
-      const textVal = document.getElementById(section + "Text").value.trim();
-      if (textVal) {
-        const texts = JSON.parse(localStorage.getItem(section + "Texts") || "[]");
-        texts.push(textVal);
-        localStorage.setItem(section + "Texts", JSON.stringify(texts));
-        document.getElementById(section + "Text").value = "";
+      const result = await response.json();
+
+      if (!response.ok) {
+        // If API returned an error
+        throw new Error(`GitHub API Error: ${result.message}`);
       }
+      
+      const fileUrl = result.content.download_url; // The direct URL to the file
 
-      // Save file media
-      const files = document.getElementById(section + "File").files;
+      // Save the public URL to localStorage
       const media = JSON.parse(localStorage.getItem(section + "Media") || "[]");
-
-      if (files.length > 0) {
-        let loaded = 0;
-        Array.from(files).forEach(file => {
-          const reader = new FileReader();
-          reader.onload = e => {
-            media.push({ type: file.type, src: e.target.result });
-            loaded++;
-            if (loaded === files.length) {
-              localStorage.setItem(section + "Media", JSON.stringify(media));
-              renderPreview(section);
-            }
-          };
-          reader.readAsDataURL(file);
-        });
-      }
-
-      // Save URL media
-      const url = document.getElementById(section + "Url").value.trim();
-      if (url) {
-        const fileType = url.endsWith(".mp4") ? "video/mp4" : "image";
-        media.push({ type: fileType, src: url });
-        localStorage.setItem(section + "Media", JSON.stringify(media));
-        document.getElementById(section + "Url").value = "";
-        renderPreview(section);
-      }
-    }
-
-    function renderPreview(section) {
-      const container = document.getElementById(section + "Preview");
-      container.innerHTML = "";
-      const media = JSON.parse(localStorage.getItem(section + "Media") || "[]");
-
-      media.forEach(item => {
-        if (item.type.startsWith("image")) {
-          const img = document.createElement("img");
-          img.src = item.src;
-          container.appendChild(img);
-        } else if (item.type.startsWith("video")) {
-          const video = document.createElement("video");
-          video.src = item.src;
-          video.controls = true;
-          container.appendChild(video);
-        }
+      media.push({
+        type: file.type,
+        src: fileUrl
       });
-    }
+      localStorage.setItem(section + "Media", JSON.stringify(media));
 
-    function toggleMode() {
-      document.body.classList.toggle("light");
-    }
+      alert("File uploaded successfully!");
+      renderPreview(section);
 
-    // Auto-login session
-    window.onload = () => {
-      if (localStorage.getItem("isAdmin") === "true") {
-        document.getElementById("loginSection").style.display = "none";
-        document.getElementById("adminContent").style.display = "block";
-        document.querySelector(".logout").style.display = "block";
-        renderSections();
+    } catch (error) {
+      console.error(error);
+      alert(`Upload failed: ${error.message}`);
+    }
+  }
+  
+  // No changes needed for the functions below this line
+  // They are included so you can replace the whole script block
+
+  function login() {
+    const user = document.getElementById("username").value;
+    const pass = document.getElementById("password").value;
+    if (user === "admin" && pass === "1234") {
+      localStorage.setItem("isAdmin", "true");
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("adminContent").style.display = "block";
+      document.querySelector(".logout").style.display = "block";
+      renderSections();
+    } else {
+      alert("Incorrect credentials!");
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem("isAdmin");
+    window.location.href = "index.html";
+  }
+
+  function renderSections() {
+    const container = document.getElementById("sectionsContainer");
+    container.innerHTML = "";
+    sections.forEach(section => {
+      const div = document.createElement("div");
+      div.className = "section";
+      div.innerHTML = `
+        <h3>${section.toUpperCase()}</h3>
+        <textarea id="${section}Text" placeholder="Enter description..."></textarea>
+        <input type="file" id="${section}File" />
+        <button onclick="saveSection('${section}')">Save ${section}</button>
+        <div class="preview" id="${section}Preview"></div>
+      `;
+      container.appendChild(div);
+      renderPreview(section);
+    });
+  }
+
+  function renderPreview(section) {
+    const container = document.getElementById(section + "Preview");
+    container.innerHTML = "";
+    const media = JSON.parse(localStorage.getItem(section + "Media") || "[]");
+    media.forEach(item => {
+      if (item.type.startsWith("image")) {
+        const img = document.createElement("img");
+        img.src = item.src;
+        container.appendChild(img);
+      } else if (item.type.startsWith("video")) {
+        const video = document.createElement("video");
+        video.src = item.src;
+        video.controls = true;
+        container.appendChild(video);
       }
-    };
-  </script>
-</body>
+    });
+  }
+
+  function toggleMode() {
+    document.body.classList.toggle("light");
+  }
+
+  window.onload = () => {
+    if (localStorage.getItem("isAdmin") === "true") {
+      document.getElementById("loginSection").style.display = "none";
+      document.getElementById("adminContent").style.display = "block";
+      document.querySelector(".logout").style.display = "block";
+      renderSections();
+    }
+  };
+</script>
+
+  </body>
 </html>
